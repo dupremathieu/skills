@@ -1,0 +1,232 @@
+#!/usr/bin/env bash
+#
+# nano-banana - CLI tool for Gemini 3.1 Flash image generation (Nano Banana 2)
+#
+# Usage:
+#   nano-banana generate "prompt" [-o output.png] [-a 16:9] [-s 2K]
+#   nano-banana edit "prompt" -i input.png [-o output.png]
+#   nano-banana config          # show current config
+#   nano-banana config set-key  # set API key interactively
+
+set -euo pipefail
+
+CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/nano-banana"
+CONFIG_FILE="$CONFIG_DIR/config"
+MODEL="gemini-3.1-flash-image-preview"
+API_BASE="https://generativelanguage.googleapis.com/v1beta/models"
+
+# --- Helpers ---
+
+die() { echo "error: $*" >&2; exit 1; }
+
+load_api_key() {
+    if [[ -n "${GEMINI_API_KEY:-}" ]]; then
+        return
+    fi
+    if [[ ! -f "$CONFIG_FILE" ]]; then
+        die "No config file found at $CONFIG_FILE. Run: nano-banana config set-key"
+    fi
+    # Source the config file (expects GEMINI_API_KEY=...)
+    # shellcheck source=/dev/null
+    source "$CONFIG_FILE"
+    if [[ -z "${GEMINI_API_KEY:-}" ]]; then
+        die "GEMINI_API_KEY not set in $CONFIG_FILE. Run: nano-banana config set-key"
+    fi
+    export GEMINI_API_KEY
+}
+
+usage() {
+    cat <<'EOF'
+nano-banana - Gemini 3.1 Flash image generation (Nano Banana 2)
+
+Usage:
+  nano-banana generate "prompt" [options]    Generate an image from text
+  nano-banana edit "prompt" -i image [opts]  Edit/transform an existing image
+  nano-banana config                         Show current configuration
+  nano-banana config set-key                 Set your Gemini API key
+
+Options:
+  -o, --output FILE       Output file path (default: nano-banana-<timestamp>.png)
+  -i, --input FILE        Input image for edit mode
+  -a, --aspect-ratio AR   Aspect ratio: 1:1, 16:9, 9:16, 4:3, 3:4 (default: 1:1)
+  -s, --size SIZE         Image size: 1K, 2K (default: 1K)
+  -m, --model MODEL       Override model (default: gemini-3.1-flash-image-preview)
+  -h, --help              Show this help
+
+Environment:
+  GEMINI_API_KEY          Override API key from config file
+
+Config file: ~/.config/nano-banana/config
+EOF
+    exit 0
+}
+
+# --- Config commands ---
+
+cmd_config() {
+    local subcmd="${1:-show}"
+    case "$subcmd" in
+        show)
+            if [[ -f "$CONFIG_FILE" ]]; then
+                echo "Config file: $CONFIG_FILE"
+                echo "---"
+                # Show config but mask the API key
+                sed 's/\(GEMINI_API_KEY=\).*/\1****/' "$CONFIG_FILE"
+            else
+                echo "No config file found at $CONFIG_FILE"
+                echo "Run: nano-banana config set-key"
+            fi
+            ;;
+        set-key)
+            mkdir -p "$CONFIG_DIR"
+            chmod 700 "$CONFIG_DIR"
+            read -rsp "Enter your Gemini API key: " key
+            echo
+            if [[ -z "$key" ]]; then
+                die "API key cannot be empty"
+            fi
+            echo "GEMINI_API_KEY=\"$key\"" > "$CONFIG_FILE"
+            chmod 600 "$CONFIG_FILE"
+            echo "API key saved to $CONFIG_FILE"
+            ;;
+        *)
+            die "Unknown config subcommand: $subcmd"
+            ;;
+    esac
+}
+
+# --- Generate command ---
+
+cmd_generate() {
+    local prompt="" output="" aspect_ratio="" image_size="" input_image=""
+
+    if [[ $# -eq 0 ]]; then
+        die "Missing prompt. Usage: nano-banana generate \"your prompt\""
+    fi
+
+    prompt="$1"; shift
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            -o|--output)       output="$2"; shift 2 ;;
+            -a|--aspect-ratio) aspect_ratio="$2"; shift 2 ;;
+            -s|--size)         image_size="$2"; shift 2 ;;
+            -i|--input)        input_image="$2"; shift 2 ;;
+            -m|--model)        MODEL="$2"; shift 2 ;;
+            *) die "Unknown option: $1" ;;
+        esac
+    done
+
+    if [[ -z "$output" ]]; then
+        output="nano-banana-$(date +%Y%m%d-%H%M%S).png"
+    fi
+
+    load_api_key
+
+    # Use a temp dir for large payloads (base64 images exceed ARG_MAX)
+    local tmpdir
+    tmpdir="$(mktemp -d)"
+    trap 'rm -rf "$tmpdir"' RETURN
+
+    # Build parts array
+    local parts_file="$tmpdir/parts.json"
+    jq -n --arg text "$prompt" '[{"text": $text}]' > "$parts_file"
+
+    # Add input image if provided
+    if [[ -n "$input_image" ]]; then
+        if [[ ! -f "$input_image" ]]; then
+            die "Input image not found: $input_image"
+        fi
+        local mime_type
+        case "${input_image,,}" in
+            *.png)  mime_type="image/png" ;;
+            *.jpg|*.jpeg) mime_type="image/jpeg" ;;
+            *.webp) mime_type="image/webp" ;;
+            *.gif)  mime_type="image/gif" ;;
+            *) die "Unsupported image format. Use PNG, JPEG, WebP, or GIF." ;;
+        esac
+        base64 -w0 "$input_image" > "$tmpdir/b64.txt"
+        jq --arg mime "$mime_type" --rawfile data "$tmpdir/b64.txt" \
+            '. + [{"inline_data": {"mime_type": $mime, "data": ($data | rtrimstr("\n"))}}]' \
+            "$parts_file" > "$tmpdir/parts2.json"
+        mv "$tmpdir/parts2.json" "$parts_file"
+    fi
+
+    # Build generation config
+    local gen_config="{}"
+    if [[ -n "$aspect_ratio" || -n "$image_size" ]]; then
+        local image_config="{}"
+        if [[ -n "$aspect_ratio" ]]; then
+            image_config="$(echo "$image_config" | jq --arg ar "$aspect_ratio" '. + {"aspectRatio": $ar}')"
+        fi
+        if [[ -n "$image_size" ]]; then
+            image_config="$(echo "$image_config" | jq --arg sz "$image_size" '. + {"imageSize": $sz}')"
+        fi
+        gen_config="$(jq -n --argjson ic "$image_config" '{"imageConfig": $ic}')"
+    fi
+
+    # Build request body
+    local body_file="$tmpdir/body.json"
+    jq -n \
+        --slurpfile parts "$parts_file" \
+        --argjson gen_config "$gen_config" \
+        '{
+            contents: [{ parts: $parts[0] }],
+            generationConfig: (if $gen_config == {} then null else $gen_config end)
+        } | del(.generationConfig | nulls)' > "$body_file"
+
+    echo "Generating image with $MODEL..."
+
+    local response
+    response="$(curl -s -X POST \
+        "${API_BASE}/${MODEL}:generateContent" \
+        -H "x-goog-api-key: ${GEMINI_API_KEY}" \
+        -H "Content-Type: application/json" \
+        -d @"$body_file")"
+
+    # Check for errors
+    local error
+    error="$(echo "$response" | jq -r '.error.message // empty')"
+    if [[ -n "$error" ]]; then
+        die "API error: $error"
+    fi
+
+    # Extract parts from response
+    local has_image=false
+    local part_count
+    part_count="$(echo "$response" | jq '.candidates[0].content.parts | length')"
+
+    if [[ "$part_count" == "null" || "$part_count" == "0" ]]; then
+        die "No content in response. The model may have refused the prompt."
+    fi
+
+    for ((i = 0; i < part_count; i++)); do
+        local text_part
+        text_part="$(echo "$response" | jq -r ".candidates[0].content.parts[$i].text // empty")"
+        if [[ -n "$text_part" ]]; then
+            echo "$text_part"
+        fi
+
+        local image_data
+        image_data="$(echo "$response" | jq -r ".candidates[0].content.parts[$i].inlineData.data // empty")"
+        if [[ -n "$image_data" ]]; then
+            echo "$image_data" | base64 -d > "$output"
+            has_image=true
+            echo "Image saved to: $output"
+        fi
+    done
+
+    if [[ "$has_image" == "false" ]]; then
+        echo "Warning: No image was generated. The response contained only text."
+    fi
+}
+
+# --- Main ---
+
+case "${1:-}" in
+    generate)  shift; cmd_generate "$@" ;;
+    edit)      shift; cmd_generate "$@" ;;
+    config)    shift; cmd_config "$@" ;;
+    -h|--help|help|"") usage ;;
+    *)         die "Unknown command: $1. Run 'nano-banana --help' for usage." ;;
+esac
