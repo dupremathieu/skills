@@ -6,6 +6,7 @@ Subcommands:
   query            Search for changes matching a query
   commit           Get commit info (including message) for a change
   patch            Get unified diff patch for a change
+  comments         List published review comments on a change
   draft            Post a draft comment on a change
 """
 
@@ -137,6 +138,14 @@ def cmd_patch(args):
     sys.stdout.buffer.write(patch_bytes)
 
 
+def cmd_comments(args):
+    password = get_password(args.server, args.username)
+    endpoint = f"/changes/{args.change}/comments"
+    result = gerrit_get(args.server, args.username, password, endpoint)
+    data = json.loads(result)
+    print(json.dumps(data, indent=2))
+
+
 def cmd_draft(args):
     password = get_password(args.server, args.username)
     endpoint = f"/changes/{args.change}/revisions/{args.revision}/drafts"
@@ -176,6 +185,10 @@ def main():
     p_patch.add_argument("change", help="Change number")
     p_patch.add_argument("revision", help="Revision ID (SHA or 'current')")
 
+    # comments
+    p_comments = sub.add_parser("comments", help="List published review comments on a change")
+    p_comments.add_argument("change", help="Change number")
+
     # draft
     p_draft = sub.add_parser("draft", help="Post a draft comment")
     p_draft.add_argument("change", help="Change number")
@@ -203,6 +216,8 @@ def main():
         cmd_commit(args)
     elif args.command == "patch":
         cmd_patch(args)
+    elif args.command == "comments":
+        cmd_comments(args)
     elif args.command == "draft":
         cmd_draft(args)
 
