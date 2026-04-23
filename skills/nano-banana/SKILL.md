@@ -8,7 +8,7 @@ description: >-
   - The user wants to edit or transform an existing image using AI
   - The user mentions Nano Banana, Gemini image generation, or gemini-3.1-flash-image-preview
   - The user wants to configure their Gemini API key for image generation
-argument-hint: "prompt" [-o output.png] [-i input.png] [-a aspect-ratio] [-s size]
+argument-hint: '"prompt" [-o output.png] [-i input.png] [-a aspect-ratio] [-s size]'
 ---
 
 # Nano Banana 2 — Image Generation Skill

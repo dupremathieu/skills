@@ -1,7 +1,7 @@
 ---
 name: slidev-sfl-slides
 description: Create Savoir-faire Linux branded first and last slides for Slidev presentations. Use when creating presentation slides with SFL branding.
-argument-hint: [title] [event]
+argument-hint: "[title] [event]"
 ---
 
 # Savoir-faire Linux Slidev Slides Generator
