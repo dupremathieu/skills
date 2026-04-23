@@ -78,7 +78,7 @@ def get_password(server, username):
     if not items:
         print(
             f"Error: No password found for {username}@{host}.\n"
-            f"Run: python3 ~/.claude/scripts/gerrit-review.py store-password --username {username}",
+            f"Run: gerrit-review.py store-password --username {username}",
             file=sys.stderr,
         )
         sys.exit(1)

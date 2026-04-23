@@ -10,16 +10,16 @@ If no arguments provided, use: `status:open -is:wip`
 
 ## Prerequisites
 
-1. Verify the helper script exists: `~/.claude/scripts/gerrit-review.py`
-2. Test connectivity by running: `python3 ~/.claude/scripts/gerrit-review.py query "status:open limit:1"`
-3. If authentication fails, instruct the user to run: `! python3 ~/.claude/scripts/gerrit-review.py store-password`
+1. Verify the helper script `gerrit-review.py` exists (in the PATH or in AI directory like `~/.claude/scripts/gerrit-review.py`)
+2. Test connectivity by running: `gerrit-review.py query "status:open limit:1"`
+3. If authentication fails, instruct the user to run: `! gerrit-review.py store-password` with the corect script path if needed
 
 ## Workflow
 
 ### Step 1: Query Changes
 
 ```bash
-python3 ~/.claude/scripts/gerrit-review.py query "<query>"
+gerrit-review.py query "<query>"
 ```
 
 Parse the JSON array. For each change, extract:
@@ -37,12 +37,12 @@ Print progress: "Reviewing change N/total: <subject>..."
 
 #### 2a. Fetch commit message
 ```bash
-python3 ~/.claude/scripts/gerrit-review.py commit <change_number> current
+gerrit-review.py commit <change_number> current
 ```
 
 #### 2b. Fetch the full patch
 ```bash
-python3 ~/.claude/scripts/gerrit-review.py patch <change_number> current
+gerrit-review.py patch <change_number> current
 ```
 
 ### Step 3: Review
@@ -72,7 +72,7 @@ Assign a severity to each finding:
 For each finding, post a draft comment:
 
 ```bash
-python3 ~/.claude/scripts/gerrit-review.py draft <change_number> current '{"path": "<file_path>", "line": <line_number>, "message": "<comment>"}'
+gerrit-review.py draft <change_number> current '{"path": "<file_path>", "line": <line_number>, "message": "<comment>"}'
 ```
 
 **Comment format:** `[Category] (severity) Description of the issue.`

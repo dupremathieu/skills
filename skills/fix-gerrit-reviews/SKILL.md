@@ -16,8 +16,9 @@ Respond to Gerrit review comments locally: apply fixes, build, test, and produce
 
 ## Prerequisites
 
-1. Helper script: `~/.claude/scripts/gerrit-review.py` (or the repo path `scripts/gerrit-review.py`)
-2. Test connectivity: `python3 ~/.claude/scripts/gerrit-review.py query "status:open limit:1"`
+1. Verify the helper script `gerrit-review.py` exists (in the PATH or in AI directory like `~/.claude/scripts/gerrit-review.py`)
+2. Test connectivity by running: `gerrit-review.py query "status:open limit:1"`
+3. If authentication fails, instruct the user to run: `! gerrit-review.py store-password` with the corect script path if needed
 3. If authentication fails, instruct the user to run: `! python3 ~/.claude/scripts/gerrit-review.py store-password`
 
 ## Procedure
@@ -37,10 +38,10 @@ Respond to Gerrit review comments locally: apply fixes, build, test, and produce
 Run in parallel:
 
 ```bash
-python3 ~/.claude/scripts/gerrit-review.py query "change:<NUMBER>"
-python3 ~/.claude/scripts/gerrit-review.py commit <NUMBER> current
-python3 ~/.claude/scripts/gerrit-review.py patch <NUMBER> current
-python3 ~/.claude/scripts/gerrit-review.py comments <NUMBER>
+gerrit-review.py query "change:<NUMBER>"
+gerrit-review.py commit <NUMBER> current
+gerrit-review.py patch <NUMBER> current
+gerrit-review.py comments <NUMBER>
 ```
 
 From these extract: `subject`, `project`, `current_revision`, changed files, and all published comments.
