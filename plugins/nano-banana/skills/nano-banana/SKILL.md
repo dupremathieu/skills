@@ -17,22 +17,22 @@ Generate and edit images using the `nano-banana` CLI tool, which wraps the Gemin
 
 ## Prerequisites
 
-The `nano-banana` command must be available in `$PATH`.
+The `nano-banana` binary ships with this plugin at `${CLAUDE_PLUGIN_ROOT}/skills/nano-banana/bin/nano-banana`. Always invoke it through that absolute path — do not assume it is on `$PATH`. For brevity, set once: `NB="${CLAUDE_PLUGIN_ROOT}/skills/nano-banana/bin/nano-banana"`.
 
-The API key must be configured in `~/.config/nano-banana/config`.
+The API key must be configured in `~/.config/nano-banana/config`, or via the `GEMINI_API_KEY` environment variable (which takes precedence).
 
 ## Commands
 
 ### Generate an image from text
 
 ```bash
-nano-banana generate "A futuristic city at sunset" -o city.png
+"$NB" generate "A futuristic city at sunset" -o city.png
 ```
 
 ### Edit an existing image
 
 ```bash
-nano-banana edit "Make the sky purple and add flying cars" -i photo.png -o edited.png
+"$NB" edit "Make the sky purple and add flying cars" -i photo.png -o edited.png
 ```
 
 ### Options
@@ -58,6 +58,3 @@ nano-banana edit "Make the sky purple and add flying cars" -i photo.png -o edite
 Input: PNG, JPEG, WebP, GIF
 Output: PNG
 
-## Environment override
-
-The `GEMINI_API_KEY` environment variable takes precedence over the config file.

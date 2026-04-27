@@ -1,0 +1,9 @@
+{
+  "name": "github-pr",
+  "version": "0.1.0",
+  "description": "Review GitHub pull requests and address PR review comments via the gh CLI.",
+  "author": {
+    "name": "Mathieu Dupré"
+  },
+  "keywords": ["github", "pull-request", "code-review"]
+}

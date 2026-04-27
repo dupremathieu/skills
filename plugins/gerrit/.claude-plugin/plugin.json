@@ -1,0 +1,9 @@
+{
+  "name": "gerrit",
+  "version": "0.1.0",
+  "description": "Review Gerrit changes and address Gerrit review comments. Bundles a Python helper that talks to the Gerrit REST API.",
+  "author": {
+    "name": "Mathieu Dupré"
+  },
+  "keywords": ["gerrit", "code-review", "sfl"]
+}

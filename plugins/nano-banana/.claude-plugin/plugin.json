@@ -1,0 +1,9 @@
+{
+  "name": "nano-banana",
+  "version": "0.1.0",
+  "description": "Generate or edit images using Nano Banana 2 (Gemini 3.1 Flash Image Preview). Bundles the nano-banana CLI wrapper.",
+  "author": {
+    "name": "Mathieu Dupré"
+  },
+  "keywords": ["image-generation", "gemini", "nano-banana"]
+}

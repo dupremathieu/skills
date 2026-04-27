@@ -1,0 +1,61 @@
+{
+  "name": "dupremathieu-skills",
+  "owner": {
+    "name": "Mathieu Dupré",
+    "url": "https://github.com/dupremathieu"
+  },
+  "metadata": {
+    "description": "Personal collection of Claude Code plugins: code review on Gerrit/GitHub, image generation with Nano Banana, cqfd help, SEAPATH virtual sandbox, and SFL Slidev branding.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "gerrit",
+      "source": "./plugins/gerrit",
+      "description": "Review Gerrit changes and address Gerrit review comments. Bundles a Python helper that talks to the Gerrit REST API.",
+      "version": "0.1.0",
+      "category": "code-review",
+      "tags": ["gerrit", "code-review"]
+    },
+    {
+      "name": "github-pr",
+      "source": "./plugins/github-pr",
+      "description": "Review GitHub pull requests and address PR review comments via the gh CLI.",
+      "version": "0.1.0",
+      "category": "code-review",
+      "tags": ["github", "pull-request"]
+    },
+    {
+      "name": "cqfd",
+      "source": "./plugins/cqfd",
+      "description": "Help with cqfd: .cqfdrc files, Dockerfiles, build flavors, release archives.",
+      "version": "0.1.0",
+      "category": "tooling",
+      "tags": ["cqfd", "docker"]
+    },
+    {
+      "name": "nano-banana",
+      "source": "./plugins/nano-banana",
+      "description": "Generate or edit images using Nano Banana 2 (Gemini 3.1 Flash Image Preview). Bundles the nano-banana CLI wrapper.",
+      "version": "0.1.0",
+      "category": "media",
+      "tags": ["image-generation", "gemini"]
+    },
+    {
+      "name": "slidev-sfl",
+      "source": "./plugins/slidev-sfl",
+      "description": "Create Savoir-faire Linux branded first and last slides for Slidev presentations.",
+      "version": "0.1.0",
+      "category": "presentations",
+      "tags": ["slidev", "sfl"]
+    },
+    {
+      "name": "seapath-virtual-sandbox",
+      "source": "./plugins/seapath-virtual-sandbox",
+      "description": "Provision, boot, and operate the 3-node SEAPATH virtual sandbox (QEMU/KVM via Terraform + Ansible).",
+      "version": "0.1.0",
+      "category": "infrastructure",
+      "tags": ["seapath", "terraform", "ansible"]
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "name": "seapath-virtual-sandbox",
+  "version": "0.1.0",
+  "description": "Provision, boot, and operate the 3-node SEAPATH virtual sandbox (QEMU/KVM via Terraform + Ansible).",
+  "author": {
+    "name": "Mathieu Dupré"
+  },
+  "keywords": ["seapath", "terraform", "ansible", "qemu", "kvm", "sfl"]
+}

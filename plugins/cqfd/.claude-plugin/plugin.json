@@ -1,0 +1,9 @@
+{
+  "name": "cqfd",
+  "version": "0.1.0",
+  "description": "Help with cqfd (ce qu'il fallait Dockeriser): .cqfdrc files, Dockerfiles, build flavors, release archives.",
+  "author": {
+    "name": "Mathieu Dupré"
+  },
+  "keywords": ["cqfd", "docker", "sfl"]
+}

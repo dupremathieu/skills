@@ -1,0 +1,9 @@
+{
+  "name": "slidev-sfl",
+  "version": "0.1.0",
+  "description": "Create Savoir-faire Linux branded first and last slides for Slidev presentations.",
+  "author": {
+    "name": "Mathieu Dupré"
+  },
+  "keywords": ["slidev", "presentation", "sfl"]
+}
