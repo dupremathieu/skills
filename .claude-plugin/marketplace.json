@@ -56,6 +56,14 @@
       "version": "0.1.0",
       "category": "infrastructure",
       "tags": ["seapath", "terraform", "ansible"]
+    },
+    {
+      "name": "redmine",
+      "source": "./plugins/redmine",
+      "description": "Fetch Redmine project issues and export them to Markdown organized by Target version. Bundles a Python REST helper.",
+      "version": "0.1.0",
+      "category": "issue-tracking",
+      "tags": ["redmine", "issues", "export"]
     }
   ]
 }

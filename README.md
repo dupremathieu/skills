@@ -12,6 +12,7 @@ A personal collection of Claude Code plugins, packaged so they can be installed 
 | `nano-banana` | Generate/edit images with Nano Banana 2 (Gemini 3.1 Flash Image Preview). Bundles the `nano-banana` CLI wrapper. |
 | `slidev-sfl` | Create Savoir-faire Linux branded opening/closing slides for Slidev presentations. |
 | `seapath-virtual-sandbox` | Provision, boot, and operate the 3-node SEAPATH virtual sandbox (QEMU/KVM via Terraform + Ansible). |
+| `redmine` | `export-redmine-issues` skill that fetches every issue of a Redmine project and writes Markdown files under `tasks/<target-version>/`. Bundles `redmine.py` (REST helper, libsecret-backed auth). |
 
 All `fix-*` skills are read-only — they apply local edits and print drafts, but never commit, push, amend, or post to remote services.
 
@@ -45,6 +46,7 @@ Plugins bundle the scripts they ship, but each still has external dependencies:
 - **seapath-virtual-sandbox** — A local clone of [seapath-virtual-sandbox](https://github.com/dupremathieu/seapath-virtual-sandbox) and the [seapath/ansible](https://github.com/seapath/ansible) repo, plus libvirt/QEMU/Terraform on the host. See `plugins/seapath-virtual-sandbox/skills/seapath-virtual-sandbox/references/install.md`.
 - **slidev-sfl** — Slidev project where the generated slides are inserted.
 - **cqfd** — Docker and (optionally) [`cqfd`](https://github.com/savoirfairelinux/cqfd) on the host.
+- **redmine** — Python 3 with `requests` and `secretstorage` (libsecret keyring). First use: `! python3 "${CLAUDE_PLUGIN_ROOT}/scripts/redmine.py" configure` to set the server URL and API key.
 
 ## Repo layout
 
