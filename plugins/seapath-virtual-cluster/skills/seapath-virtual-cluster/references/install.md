@@ -1,4 +1,4 @@
-# SEAPATH Virtual Sandbox — one-time bootstrap
+# SEAPATH Virtual Cluster — one-time bootstrap
 
 Read this file **only** when the sandbox repo (or the SEAPATH ansible repo) is missing locally. Once both repos exist and the host prereqs are in place, return to `SKILL.md` — none of the steps below need to be repeated.
 
@@ -9,7 +9,7 @@ The two repos must be siblings so that the Makefile's default `ANSIBLE_REPO=./an
 ## 2. Clone both repos
 
 ```bash
-git clone https://github.com/dupremathieu/seapath-virtual-sandbox.git
+git clone https://github.com/dupremathieu/seapath-virtual-cluster.git
 git clone https://github.com/seapath/ansible.git
 ```
 
@@ -17,11 +17,11 @@ Resulting layout:
 
 ```
 <parent>/
-├── seapath-virtual-sandbox/   # this skill operates here
+├── seapath-virtual-cluster/   # this skill operates here
 └── ansible/                   # SEAPATH Ansible repo (used by make ansible-setup)
 ```
 
-With this layout, every `ansible-*` Make target needs `ANSIBLE_REPO=../ansible`. Alternatively, clone (or symlink) the ansible repo as `seapath-virtual-sandbox/ansible` to use the Makefile default.
+With this layout, every `ansible-*` Make target needs `ANSIBLE_REPO=../ansible`. Alternatively, clone (or symlink) the ansible repo as `seapath-virtual-cluster/ansible` to use the Makefile default.
 
 ## 3. Install the SEAPATH Ansible dependencies
 
@@ -77,7 +77,7 @@ This is a property of the image build and cannot be patched from the sandbox. Ei
 ## 6. Create `terraform/terraform.tfvars`
 
 ```bash
-cd seapath-virtual-sandbox
+cd seapath-virtual-cluster
 cp terraform.tfvars.example terraform/terraform.tfvars
 $EDITOR terraform/terraform.tfvars   # set base_image_path at minimum
 ```
@@ -90,7 +90,7 @@ Once the layout looks like:
 
 ```
 <parent>/
-├── seapath-virtual-sandbox/
+├── seapath-virtual-cluster/
 │   └── terraform/terraform.tfvars   # exists, base_image_path set
 └── ansible/                         # prepare.sh has been run
 ```

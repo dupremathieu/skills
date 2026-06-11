@@ -20,7 +20,7 @@ This repo is a **Claude Code plugin marketplace**. It bundles several plugins, e
 - **Reference bundled scripts via `${CLAUDE_PLUGIN_ROOT}`**, not `$PATH` and not `~/.claude/scripts/...`. Claude Code sets this env var to the plugin's absolute root when it loads the plugin. Example: `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/gerrit-review.py" query "..."`.
 - **Frontmatter is load-bearing.** A malformed YAML block makes the skill invisible to the harness. Keep `name` and `description` present and valid.
 - **Skill descriptions drive matching.** When adding triggers, list concrete user phrases ("fixing PR remarks", "addressing feedback") rather than abstract capabilities — Claude Code matches on this text.
-- **Progressive disclosure.** For multi-file skills (see `plugins/seapath-virtual-sandbox`), keep `SKILL.md` short and gate large reference content behind explicit "read this file when X" instructions.
+- **Progressive disclosure.** For multi-file skills (see `plugins/seapath-virtual-cluster`), keep `SKILL.md` short and gate large reference content behind explicit "read this file when X" instructions.
 - **Read-only contract on `fix-*` skills.** `fix-gerrit-reviews` and `fix-pr-reviews` deliberately do **not** post replies, amend commits, or push — they print drafts for the user to apply manually. Preserve this contract.
 - **Marketplace and plugin manifests must stay in sync.** When bumping a plugin's version in `plugins/<name>/.claude-plugin/plugin.json`, mirror it in `.claude-plugin/marketplace.json`. When renaming a plugin, update the `source` path too.
 

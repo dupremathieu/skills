@@ -1,30 +1,30 @@
 ---
-name: seapath-virtual-sandbox
-description: Provision, boot, and operate the 3-node SEAPATH virtual sandbox (QEMU/KVM via Terraform + Ansible). Use when the user wants to start/stop the cluster, run the SEAPATH Ansible setup, connect to nodes, or run tests against the sandbox. Designed to be used by any AI coding agent (Claude Code, OpenCode, etc.) and works whether or not the sandbox repo is the current working directory.
+name: seapath-virtual-cluster
+description: Provision, boot, and operate the 3-node SEAPATH virtual cluster (QEMU/KVM via Terraform + Ansible). Use when the user wants to start/stop the cluster, run the SEAPATH Ansible setup, connect to nodes, or run tests against the cluster. Designed to be used by any AI coding agent (Claude Code, OpenCode, etc.) and works whether or not the cluster repo is the current working directory.
 ---
 
-# SEAPATH Virtual Sandbox
+# SEAPATH Virtual Cluster
 
-The [seapath-virtual-sandbox](https://github.com/dupremathieu/seapath-virtual-sandbox) repo provisions a 3-node SEAPATH cluster on QEMU/KVM. Terraform (dmacvicar/libvirt) creates the VMs and networks; the external [seapath/ansible](https://github.com/seapath/ansible.git) repo configures the cluster. All operations are wrapped by the `Makefile` at the sandbox repo root — prefer `make` targets over invoking `terraform` / `ansible-playbook` directly.
+The [seapath-virtual-cluster](https://github.com/dupremathieu/seapath-virtual-cluster) repo provisions a 3-node SEAPATH cluster on QEMU/KVM. Terraform (dmacvicar/libvirt) creates the VMs and networks; the external [seapath/ansible](https://github.com/seapath/ansible.git) repo configures the cluster. All operations are wrapped by the `Makefile` at the cluster repo root — prefer `make` targets over invoking `terraform` / `ansible-playbook` directly.
 
-## Step 0 — Locate the sandbox repo (do this first)
+## Step 0 — Locate the cluster repo (do this first)
 
-Every command in this skill assumes the working directory is the sandbox repo root. Before doing anything else, locate it. The repo is recognised by having both a `Makefile` and a `terraform/` directory, plus `inventory/seapath-sandbox.yaml`.
+Every command in this skill assumes the working directory is the cluster repo root. Before doing anything else, locate it. The repo is recognised by having both a `Makefile` and a `terraform/` directory, plus `inventory/seapath-sandbox.yaml`.
 
 Search in this order and `cd` into the first match:
 
 ```bash
-for d in . ./seapath-virtual-sandbox ../seapath-virtual-sandbox ../../seapath-virtual-sandbox; do
+for d in . ./virtual-cluster ../virtual-cluster ../../virtual-cluster; do
   if [ -f "$d/Makefile" ] && [ -d "$d/terraform" ] && [ -f "$d/inventory/seapath-sandbox.yaml" ]; then
-    SANDBOX_DIR="$(cd "$d" && pwd)"; echo "Found sandbox repo at: $SANDBOX_DIR"; break
+    CLUSTER_DIR="$(cd "$d" && pwd)"; echo "Found cluster repo at: $CLUSTER_DIR"; break
   fi
 done
 ```
 
-- **If `SANDBOX_DIR` is set**: `cd "$SANDBOX_DIR"` and continue with the rest of this skill.
-- **If no match was found**: the user does not yet have the sandbox cloned locally. Read `references/install.md` for the one-time bootstrap procedure (clone the sandbox repo, clone the SEAPATH ansible repo, install host dependencies, create `terraform/terraform.tfvars`). Do not load `install.md` otherwise — it is irrelevant once the repo is present.
+- **If `CLUSTER_DIR` is set**: `cd "$CLUSTER_DIR"` and continue with the rest of this skill.
+- **If no match was found**: the user does not yet have the cluster cloned locally. Read `references/install.md` for the one-time bootstrap procedure (clone the cluster repo, clone the SEAPATH ansible repo, install host dependencies, create `terraform/terraform.tfvars`). Do not load `install.md` otherwise — it is irrelevant once the repo is present.
 
-The same applies to the SEAPATH ansible repo: by default the Makefile expects it at `./ansible` (relative to the sandbox repo). If it is at a different path, pass `ANSIBLE_REPO=<path>` on every `ansible-*` target (commonly `ANSIBLE_REPO=../ansible`). If `<sandbox>/ansible` does not exist and `<sandbox>/../ansible` does not exist either, also read `references/install.md`.
+The same applies to the SEAPATH ansible repo: by default the Makefile expects it at `./ansible` (relative to the cluster repo). If it is at a different path, pass `ANSIBLE_REPO=<path>` on every `ansible-*` target (commonly `ANSIBLE_REPO=../ansible`). If `<cluster>/ansible` does not exist and `<cluster>/../ansible` does not exist either, also read `references/install.md`.
 
 ## Repo layout (what matters)
 
@@ -36,7 +36,7 @@ The same applies to the SEAPATH ansible repo: by default the Makefile expects it
 
 ## Bring the cluster up
 
-Run from the sandbox repo root:
+Run from the cluster repo root:
 
 ```bash
 make init                                          # one-time: terraform init
@@ -104,7 +104,7 @@ File: `inventory/seapath-sandbox.yaml`. Important when writing tests or new play
 - **Cluster ring interfaces** (used by OVS RSTP): `team0_0=enp2s0`, `team0_1=enp3s0`. Only meaningful inside `cluster_machines`.
 - **Cluster IPs** (assigned statically by the network playbook, not by libvirt): node1=`192.168.55.1`, node2=`192.168.55.2`, node3=`192.168.55.3`. Subnet `192.168.55.0/24` is `cluster_network` / `public_network` for Ceph.
 - **Ceph OSD disk**: `/dev/vdb` on every node (the second virtio disk created by Terraform).
-- **No PTP, no isolcpus, no observers** — these are intentionally empty/omitted in the sandbox.
+- **No PTP, no isolcpus, no observers** — these are intentionally empty/omitted in the cluster.
 
 When a playbook needs only a subset of nodes, use the existing groups (`hypervisors`, `cluster_machines`, `mons`, `osds`, `clients`) rather than adding new ones.
 
@@ -138,4 +138,4 @@ ansible node1 -i inventory/seapath-sandbox.yaml -b -m shell -a "crm_mon -1"
 
 ## When NOT to use this skill
 
-This skill covers operating the sandbox. It does **not** cover modifying SEAPATH Ansible roles or playbooks — those live in the external `seapath/ansible` repo. For changes to cluster configuration logic, work in that repo and re-run `make ansible-setup` here to test.
+This skill covers operating the cluster. It does **not** cover modifying SEAPATH Ansible roles or playbooks — those live in the external `seapath/ansible` repo. For changes to cluster configuration logic, work in that repo and re-run `make ansible-setup` here to test.

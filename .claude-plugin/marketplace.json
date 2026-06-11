@@ -5,7 +5,7 @@
     "url": "https://github.com/dupremathieu"
   },
   "metadata": {
-    "description": "Personal collection of Claude Code plugins: code review on Gerrit/GitHub, image generation with Nano Banana, cqfd help, SEAPATH virtual sandbox, and SFL Slidev branding.",
+    "description": "Personal collection of Claude Code plugins: code review on Gerrit/GitHub, image generation with Nano Banana, cqfd help, SEAPATH virtual cluster, and SFL Slidev branding.",
     "version": "0.1.0"
   },
   "plugins": [
@@ -50,9 +50,9 @@
       "tags": ["slidev", "sfl"]
     },
     {
-      "name": "seapath-virtual-sandbox",
-      "source": "./plugins/seapath-virtual-sandbox",
-      "description": "Provision, boot, and operate the 3-node SEAPATH virtual sandbox (QEMU/KVM via Terraform + Ansible).",
+      "name": "seapath-virtual-cluster",
+      "source": "./plugins/seapath-virtual-cluster",
+      "description": "Provision, boot, and operate the 3-node SEAPATH virtual cluster (QEMU/KVM via Terraform + Ansible).",
       "version": "0.1.0",
       "category": "infrastructure",
       "tags": ["seapath", "terraform", "ansible"]
