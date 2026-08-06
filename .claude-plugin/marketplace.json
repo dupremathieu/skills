@@ -5,7 +5,7 @@
     "url": "https://github.com/dupremathieu"
   },
   "metadata": {
-    "description": "Personal collection of Claude Code plugins: code review on Gerrit/GitHub, image generation with Nano Banana, cqfd help, SEAPATH virtual cluster, and SFL Slidev branding.",
+    "description": "Personal collection of Claude Code plugins: code review on Gerrit/GitHub, image generation through OpenRouter, cqfd help, SEAPATH virtual cluster, and SFL Slidev branding.",
     "version": "0.1.0"
   },
   "plugins": [
@@ -34,12 +34,12 @@
       "tags": ["cqfd", "docker"]
     },
     {
-      "name": "nano-banana",
-      "source": "./plugins/nano-banana",
-      "description": "Generate or edit images using Nano Banana 2 (Gemini 3.1 Flash Image Preview). Bundles the nano-banana CLI wrapper.",
+      "name": "openrouter-image",
+      "source": "./plugins/openrouter-image",
+      "description": "Generate or edit images through OpenRouter's Image API. Bundles the openrouter-image Python CLI.",
       "version": "0.1.0",
       "category": "media",
-      "tags": ["image-generation", "gemini"]
+      "tags": ["image-generation", "openrouter"]
     },
     {
       "name": "slidev-sfl",

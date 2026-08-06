@@ -9,7 +9,7 @@ A personal collection of Claude Code plugins, packaged so they can be installed 
 | `gerrit` | `/review-gerrit` to leave draft comments on a Gerrit query, and a `fix-gerrit-reviews` skill that addresses unresolved comments locally. Bundles `gerrit-review.py` (REST API helper, libsecret-backed auth). |
 | `github-pr` | `/review-pr` to print a structured review of a GitHub PR, and a `fix-pr-reviews` skill that addresses review threads locally. Uses the `gh` CLI. |
 | `cqfd` | Help authoring and troubleshooting cqfd setups (`.cqfdrc`, Dockerfile, build flavors, release archives). |
-| `nano-banana` | Generate/edit images with Nano Banana 2 (Gemini 3.1 Flash Image Preview). Bundles the `nano-banana` CLI wrapper. |
+| `openrouter-image` | Generate/edit images through OpenRouter's Image API. Bundles the `openrouter-image` Python CLI. |
 | `slidev-sfl` | Create Savoir-faire Linux branded opening/closing slides for Slidev presentations. |
 | `seapath-virtual-cluster` | Provision, boot, and operate the 3-node SEAPATH virtual cluster (QEMU/KVM via Terraform + Ansible). |
 | `redmine` | `export-redmine-issues` skill that fetches every issue of a Redmine project and writes Markdown files under `tasks/<target-version>/`. Bundles `redmine.py` (REST helper, libsecret-backed auth). |
@@ -24,7 +24,7 @@ In Claude Code, add this repo as a marketplace, then install the plugins you wan
 /plugin marketplace add dupremathieu/skills
 /plugin install gerrit@dupremathieu-skills
 /plugin install github-pr@dupremathieu-skills
-/plugin install nano-banana@dupremathieu-skills
+/plugin install openrouter-image@dupremathieu-skills
 # ...etc
 ```
 
@@ -42,7 +42,7 @@ Plugins bundle the scripts they ship, but each still has external dependencies:
 
 - **gerrit** — Python 3 with `requests` and `secretstorage` (libsecret keyring). First use: `! python3 "${CLAUDE_PLUGIN_ROOT}/scripts/gerrit-review.py" store-password`.
 - **github-pr** — `gh` CLI authenticated against the relevant host.
-- **nano-banana** — A Gemini API key in `~/.config/nano-banana/config` or the `GEMINI_API_KEY` environment variable.
+- **openrouter-image** — Python 3 and an OpenRouter API key in `~/.config/openrouter-image/config` or the `OPENROUTER_API_KEY` environment variable. OpenRouter usage is billed separately from ChatGPT subscriptions.
 - **seapath-virtual-cluster** — A local clone of [seapath-virtual-cluster](https://github.com/dupremathieu/seapath-virtual-cluster) and the [seapath/ansible](https://github.com/seapath/ansible) repo, plus libvirt/QEMU/Terraform on the host. See `plugins/seapath-virtual-cluster/skills/seapath-virtual-cluster/references/install.md`.
 - **slidev-sfl** — Slidev project where the generated slides are inserted.
 - **cqfd** — Docker and (optionally) [`cqfd`](https://github.com/savoirfairelinux/cqfd) on the host.

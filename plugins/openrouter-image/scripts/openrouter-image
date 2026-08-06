@@ -1,0 +1,354 @@
+#!/usr/bin/env python3
+"""Generate and edit images through OpenRouter's Image API."""
+
+from __future__ import annotations
+
+import argparse
+import base64
+import getpass
+import json
+import mimetypes
+import os
+import sys
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, Optional
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
+
+
+API_BASE = "https://openrouter.ai/api/v1"
+MODELS_URL = f"{API_BASE}/images/models"
+IMAGES_URL = f"{API_BASE}/images"
+DEFAULT_MODEL = "openai/gpt-image-2"
+DEFAULT_RESOLUTION = "1K"
+DEFAULT_ASPECT_RATIO = "1:1"
+HTTP_TIMEOUT = 120
+
+CONFIG_HOME = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config"))
+CONFIG_DIR = CONFIG_HOME / "openrouter-image"
+CONFIG_FILE = CONFIG_DIR / "config"
+
+SUPPORTED_INPUT_TYPES = {
+    ".gif": "image/gif",
+    ".jpeg": "image/jpeg",
+    ".jpg": "image/jpeg",
+    ".png": "image/png",
+    ".webp": "image/webp",
+}
+
+
+class CLIError(Exception):
+    """An expected command-line or configuration error."""
+
+
+class APIError(Exception):
+    """An OpenRouter API or transport error."""
+
+
+def _read_config() -> Dict[str, str]:
+    if not CONFIG_FILE.is_file():
+        return {}
+
+    values: Dict[str, str] = {}
+    for raw_line in CONFIG_FILE.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        value = value.strip()
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
+            value = value[1:-1]
+        values[key.strip()] = value
+    return values
+
+
+def _write_config(values: Dict[str, str]) -> None:
+    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    try:
+        CONFIG_DIR.chmod(0o700)
+    except OSError:
+        pass
+
+    body = "".join(f'{key}="{value}"\n' for key, value in values.items())
+    CONFIG_FILE.write_text(body, encoding="utf-8")
+    try:
+        CONFIG_FILE.chmod(0o600)
+    except OSError:
+        pass
+
+
+def _api_key(required: bool = True) -> Optional[str]:
+    key = os.environ.get("OPENROUTER_API_KEY") or _read_config().get(
+        "OPENROUTER_API_KEY"
+    )
+    if required and not key:
+        raise CLIError(
+            "No OpenRouter API key found. Set OPENROUTER_API_KEY or run "
+            f"'{sys.argv[0]} config set-key'."
+        )
+    return key
+
+
+def _error_message(payload: Any) -> str:
+    if isinstance(payload, dict):
+        error = payload.get("error")
+        if isinstance(error, dict):
+            message = error.get("message")
+            if message:
+                code = error.get("code")
+                return f"{message} (code {code})" if code else str(message)
+        if isinstance(error, str):
+            return error
+        message = payload.get("message")
+        if message:
+            return str(message)
+    return "The API returned an unexpected response."
+
+
+def _request_json(
+    url: str,
+    *,
+    method: str = "GET",
+    payload: Optional[Dict[str, Any]] = None,
+    api_key: Optional[str] = None,
+) -> Dict[str, Any]:
+    headers = {
+        "Accept": "application/json",
+        "User-Agent": "openrouter-image/0.1.0",
+    }
+    body = None
+    if payload is not None:
+        headers["Content-Type"] = "application/json"
+        body = json.dumps(payload).encode("utf-8")
+    if api_key:
+        headers["Authorization"] = f"Bearer {api_key}"
+
+    request = Request(url, data=body, headers=headers, method=method)
+    try:
+        with urlopen(request, timeout=HTTP_TIMEOUT) as response:
+            raw = response.read()
+    except HTTPError as error:
+        raw = error.read()
+        try:
+            payload_data = json.loads(raw.decode("utf-8"))
+        except (UnicodeDecodeError, json.JSONDecodeError):
+            payload_data = None
+        detail = _error_message(payload_data) if payload_data else raw.decode(
+            "utf-8", errors="replace"
+        ).strip()
+        raise APIError(f"OpenRouter API error ({error.code}): {detail}") from error
+    except URLError as error:
+        raise APIError(f"Could not connect to OpenRouter: {error.reason}") from error
+
+    try:
+        result = json.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as error:
+        raise APIError("OpenRouter returned invalid JSON.") from error
+    if not isinstance(result, dict):
+        raise APIError("OpenRouter returned an unexpected JSON response.")
+    if result.get("error"):
+        raise APIError(_error_message(result))
+    return result
+
+
+def _image_data_url(path: Path) -> str:
+    if not path.is_file():
+        raise CLIError(f"Input image not found: {path}")
+
+    mime_type = SUPPORTED_INPUT_TYPES.get(path.suffix.lower())
+    if not mime_type:
+        guessed_type, _ = mimetypes.guess_type(path.name)
+        mime_type = guessed_type if guessed_type in SUPPORTED_INPUT_TYPES.values() else None
+    if not mime_type:
+        raise CLIError("Unsupported image format. Use PNG, JPEG, WebP, or GIF.")
+
+    encoded = base64.b64encode(path.read_bytes()).decode("ascii")
+    return f"data:{mime_type};base64,{encoded}"
+
+
+def _build_image_payload(args: argparse.Namespace, input_image: Optional[Path]) -> Dict[str, Any]:
+    payload: Dict[str, Any] = {
+        "model": args.model,
+        "prompt": args.prompt,
+        "size": args.resolution,
+        "aspect_ratio": args.aspect_ratio,
+    }
+    if args.quality:
+        payload["quality"] = args.quality
+    if args.output_format:
+        payload["output_format"] = args.output_format
+    if input_image:
+        payload["input_references"] = [
+            {
+                "type": "image_url",
+                "image_url": {"url": _image_data_url(input_image)},
+            }
+        ]
+    return payload
+
+
+def _extension_for_media_type(media_type: str) -> str:
+    extensions = {
+        "image/jpeg": ".jpg",
+        "image/png": ".png",
+        "image/webp": ".webp",
+        "image/svg+xml": ".svg",
+    }
+    return extensions.get(media_type.lower(), ".png")
+
+
+def _save_first_image(response: Dict[str, Any], output: Optional[str]) -> Path:
+    images = response.get("data")
+    if not isinstance(images, list) or not images:
+        raise APIError("No image was returned by OpenRouter.")
+
+    image = images[0]
+    if not isinstance(image, dict) or not image.get("b64_json"):
+        raise APIError("OpenRouter returned an image without base64 data.")
+
+    try:
+        image_bytes = base64.b64decode(image["b64_json"], validate=True)
+    except (TypeError, ValueError) as error:
+        raise APIError("OpenRouter returned invalid base64 image data.") from error
+
+    media_type = str(image.get("media_type", "image/png"))
+    output_path = (
+        Path(output)
+        if output
+        else Path(
+            "openrouter-image-"
+            f"{datetime.now().strftime('%Y%m%d-%H%M%S')}"
+            f"{_extension_for_media_type(media_type)}"
+        )
+    )
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_bytes(image_bytes)
+    print(f"Image saved to: {output_path}")
+    return output_path
+
+
+def _cmd_generate(args: argparse.Namespace) -> None:
+    key = _api_key()
+    response = _request_json(
+        IMAGES_URL,
+        method="POST",
+        payload=_build_image_payload(args, None),
+        api_key=key,
+    )
+    _save_first_image(response, args.output)
+
+
+def _cmd_edit(args: argparse.Namespace) -> None:
+    key = _api_key()
+    response = _request_json(
+        IMAGES_URL,
+        method="POST",
+        payload=_build_image_payload(args, Path(args.input)),
+        api_key=key,
+    )
+    _save_first_image(response, args.output)
+
+
+def _cmd_models(args: argparse.Namespace) -> None:
+    response = _request_json(MODELS_URL, api_key=_api_key(required=False))
+    if args.json:
+        print(json.dumps(response, indent=2, ensure_ascii=False))
+        return
+
+    models = response.get("data", [])
+    if not isinstance(models, list):
+        raise APIError("OpenRouter returned an invalid model list.")
+    for model in models:
+        if not isinstance(model, dict):
+            continue
+        model_id = str(model.get("id", ""))
+        name = str(model.get("name", ""))
+        parameters = model.get("supported_parameters", {})
+        parameter_names = ", ".join(parameters.keys()) if isinstance(parameters, dict) else ""
+        suffix = f"  [{parameter_names}]" if parameter_names else ""
+        print(f"{model_id:<42} {name}{suffix}")
+
+
+def _cmd_config(args: argparse.Namespace) -> None:
+    if args.action == "show":
+        if not CONFIG_FILE.is_file():
+            print(f"No config file found at {CONFIG_FILE}")
+            print(f"Run: {sys.argv[0]} config set-key")
+            return
+        print(f"Config file: {CONFIG_FILE}")
+        print("---")
+        for key, value in _read_config().items():
+            print(f"{key}={'****' if key == 'OPENROUTER_API_KEY' else value}")
+        return
+
+    key = getpass.getpass("Enter your OpenRouter API key: ").strip()
+    if not key:
+        raise CLIError("API key cannot be empty.")
+    values = _read_config()
+    values["OPENROUTER_API_KEY"] = key
+    _write_config(values)
+    print(f"API key saved to {CONFIG_FILE}")
+
+
+def _add_image_options(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("prompt", help="Text prompt for the image")
+    parser.add_argument("-o", "--output", help="Output image path")
+    parser.add_argument(
+        "-m", "--model", default=DEFAULT_MODEL, help=f"OpenRouter model (default: {DEFAULT_MODEL})"
+    )
+    parser.add_argument(
+        "-a", "--aspect-ratio", default=DEFAULT_ASPECT_RATIO, help="Requested aspect ratio (default: 1:1)"
+    )
+    parser.add_argument(
+        "-s", "--resolution", "--size", default=DEFAULT_RESOLUTION,
+        choices=("512", "1K", "2K", "4K"), help="Requested resolution (default: 1K)"
+    )
+    parser.add_argument(
+        "-q", "--quality", choices=("auto", "low", "medium", "high"),
+        help="Requested quality"
+    )
+    parser.add_argument(
+        "--output-format", choices=("png", "jpeg", "webp", "svg"),
+        help="Requested output format"
+    )
+
+
+def _build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Generate and edit images through OpenRouter's Image API."
+    )
+    subcommands = parser.add_subparsers(dest="command", required=True)
+
+    generate = subcommands.add_parser("generate", help="Generate an image from a prompt")
+    _add_image_options(generate)
+    generate.set_defaults(handler=_cmd_generate)
+
+    edit = subcommands.add_parser("edit", help="Edit an image using a prompt")
+    _add_image_options(edit)
+    edit.add_argument("-i", "--input", required=True, help="Input image path")
+    edit.set_defaults(handler=_cmd_edit)
+
+    models = subcommands.add_parser("models", help="List OpenRouter image models")
+    models.add_argument("--json", action="store_true", help="Print raw JSON")
+    models.set_defaults(handler=_cmd_models)
+
+    config = subcommands.add_parser("config", help="Show or configure credentials")
+    config.add_argument("action", choices=("show", "set-key"), nargs="?", default="show")
+    config.set_defaults(handler=_cmd_config)
+    return parser
+
+
+def main() -> int:
+    parser = _build_parser()
+    args = parser.parse_args()
+    try:
+        args.handler(args)
+    except (CLIError, APIError) as error:
+        print(f"error: {error}", file=sys.stderr)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

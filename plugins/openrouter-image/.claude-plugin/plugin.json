@@ -1,0 +1,9 @@
+{
+  "name": "openrouter-image",
+  "version": "0.1.0",
+  "description": "Generate or edit images through OpenRouter's Image API. Bundles the openrouter-image Python CLI.",
+  "author": {
+    "name": "Mathieu Dupré"
+  },
+  "keywords": ["image-generation", "openrouter", "openai", "gemini"]
+}

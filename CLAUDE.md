@@ -12,7 +12,7 @@ This repo is a **Claude Code plugin marketplace**. It bundles several plugins, e
 - `plugins/<name>/.claude-plugin/plugin.json` — per-plugin manifest (name, version, description, author, keywords).
 - `plugins/<name>/skills/<skill>/SKILL.md` — skill definitions (YAML frontmatter + body).
 - `plugins/<name>/commands/<cmd>.md` — slash command definitions.
-- `plugins/<name>/scripts/` (and similar) — bundled helper scripts (e.g. `plugins/gerrit/scripts/gerrit-review.py`, `plugins/nano-banana/skills/nano-banana/bin/nano-banana`).
+- `plugins/<name>/scripts/` (and similar) — bundled helper scripts (e.g. `plugins/gerrit/scripts/gerrit-review.py`, `plugins/openrouter-image/scripts/openrouter-image`).
 - `README.md` — human-facing index of plugins and install instructions.
 
 ## Conventions when editing plugins
