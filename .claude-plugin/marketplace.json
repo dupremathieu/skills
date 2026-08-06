@@ -6,64 +6,72 @@
   },
   "metadata": {
     "description": "Personal collection of Claude Code plugins: code review on Gerrit/GitHub, image generation through OpenRouter, cqfd help, SEAPATH virtual cluster, and SFL Slidev branding.",
-    "version": "0.1.0"
+    "version": "0.1.0",
+    "pluginRoot": "./plugins"
   },
   "plugins": [
     {
       "name": "gerrit",
-      "source": "./plugins/gerrit",
+      "source": "./gerrit",
       "description": "Review Gerrit changes and address Gerrit review comments. Bundles a Python helper that talks to the Gerrit REST API.",
       "version": "0.1.0",
       "category": "code-review",
-      "tags": ["gerrit", "code-review"]
+      "tags": ["gerrit", "code-review"],
+      "skills": ["./skills/fix-gerrit-reviews"]
     },
     {
       "name": "github-pr",
-      "source": "./plugins/github-pr",
+      "source": "./github-pr",
       "description": "Review GitHub pull requests and address PR review comments via the gh CLI.",
       "version": "0.1.0",
       "category": "code-review",
-      "tags": ["github", "pull-request"]
+      "tags": ["github", "pull-request"],
+      "skills": ["./skills/fix-pr-reviews"]
     },
     {
       "name": "cqfd",
-      "source": "./plugins/cqfd",
+      "source": "./cqfd",
       "description": "Help with cqfd: .cqfdrc files, Dockerfiles, build flavors, release archives.",
       "version": "0.1.0",
       "category": "tooling",
-      "tags": ["cqfd", "docker"]
+      "tags": ["cqfd", "docker"],
+      "skills": ["./skills/cqfd"]
     },
     {
       "name": "openrouter-image",
-      "source": "./plugins/openrouter-image",
+      "source": "./openrouter-image",
       "description": "Generate or edit images through OpenRouter's Image API. Bundles the openrouter-image Python CLI.",
       "version": "0.1.0",
       "category": "media",
-      "tags": ["image-generation", "openrouter"]
+      "tags": ["image-generation", "openrouter"],
+      "skills": ["./skills/openrouter-image"]
     },
     {
       "name": "slidev-sfl",
-      "source": "./plugins/slidev-sfl",
+      "source": "./slidev-sfl",
       "description": "Create Savoir-faire Linux branded first and last slides for Slidev presentations.",
       "version": "0.1.0",
       "category": "presentations",
-      "tags": ["slidev", "sfl"]
+      "tags": ["slidev", "sfl"],
+      "skills": ["./skills/slidev-sfl-slides"]
     },
     {
       "name": "seapath-virtual-cluster",
-      "source": "./plugins/seapath-virtual-cluster",
+      "source": "./seapath-virtual-cluster",
       "description": "Provision, boot, and operate the 3-node SEAPATH virtual cluster (QEMU/KVM via Terraform + Ansible).",
       "version": "0.1.0",
       "category": "infrastructure",
-      "tags": ["seapath", "terraform", "ansible"]
+      "tags": ["seapath", "terraform", "ansible"],
+      "skills": ["./skills/seapath-virtual-cluster"]
     },
     {
       "name": "redmine",
-      "source": "./plugins/redmine",
+      "source": "./redmine",
       "description": "Fetch Redmine project issues and export them to Markdown organized by Target version. Bundles a Python REST helper.",
       "version": "0.1.0",
       "category": "issue-tracking",
-      "tags": ["redmine", "issues", "export"]
+      "tags": ["redmine", "issues", "export"],
+      "skills": ["./skills/export-redmine-issues"]
     }
   ]
 }

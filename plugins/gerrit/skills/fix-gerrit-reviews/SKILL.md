@@ -16,10 +16,20 @@ Respond to Gerrit review comments locally: apply fixes, build, test, and produce
 
 ## Prerequisites
 
-The helper script is bundled with this plugin at `${CLAUDE_PLUGIN_ROOT}/scripts/gerrit-review.py`. Always invoke it through that path — do not assume it is on `$PATH`. It needs the `requests` and `secretstorage` Python packages.
+The helper script is bundled with this skill in its `scripts/` directory. It needs the `requests` and `secretstorage` Python packages. Resolve its absolute path once, depending on how the skill was installed:
 
-1. Test connectivity: `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/gerrit-review.py" query "status:open limit:1"`
-2. If authentication fails, instruct the user to run: `! python3 "${CLAUDE_PLUGIN_ROOT}/scripts/gerrit-review.py" store-password`
+```bash
+if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ]; then
+  GERRIT_HELPER="${CLAUDE_PLUGIN_ROOT}/skills/fix-gerrit-reviews/scripts/gerrit-review.py"
+else
+  GERRIT_HELPER="$(find "${HOME}/.claude/skills" "${HOME}/.agents/skills" "${HOME}/.config/opencode/skills" -maxdepth 4 -path '*/fix-gerrit-reviews/scripts/gerrit-review.py' 2>/dev/null | head -1)"
+fi
+```
+
+If `GERRIT_HELPER` comes back empty, locate `gerrit-review.py` with a `find` from the project's `.claude/skills` or `.agents/skills`. Always invoke the script through the resolved path — do not assume it is on `$PATH`.
+
+1. Test connectivity: `python3 "${GERRIT_HELPER}" query "status:open limit:1"`
+2. If authentication fails, instruct the user to run: `! python3 "${GERRIT_HELPER}" store-password`
 
 ## Procedure
 
@@ -29,7 +39,7 @@ The helper script is bundled with this plugin at `${CLAUDE_PLUGIN_ROOT}/scripts/
 - If not provided, detect from the current git branch's latest commit `Change-Id:` trailer and query it:
   ```bash
   CID=$(git log -1 --format=%B | sed -n 's/^Change-Id: //p')
-  python3 "${CLAUDE_PLUGIN_ROOT}/scripts/gerrit-review.py" query "change:$CID status:open"
+  python3 "${GERRIT_HELPER}" query "change:$CID status:open"
   ```
   Extract `_number` from the first result.
 
@@ -38,7 +48,7 @@ The helper script is bundled with this plugin at `${CLAUDE_PLUGIN_ROOT}/scripts/
 Run in parallel:
 
 ```bash
-GERRIT="python3 ${CLAUDE_PLUGIN_ROOT}/scripts/gerrit-review.py"
+GERRIT="python3 ${GERRIT_HELPER}"
 $GERRIT query "change:<NUMBER>"
 $GERRIT commit <NUMBER> current
 $GERRIT patch <NUMBER> current

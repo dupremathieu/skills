@@ -10,12 +10,12 @@ If no arguments provided, use: `status:open -is:wip`
 
 ## Prerequisites
 
-The helper script ships with this plugin at `${CLAUDE_PLUGIN_ROOT}/scripts/gerrit-review.py`. Always invoke it through that path. It depends on Python packages `requests` and `secretstorage`.
+The helper script ships with this plugin at `${CLAUDE_PLUGIN_ROOT}/skills/fix-gerrit-reviews/scripts/gerrit-review.py`. Always invoke it through that path. It depends on Python packages `requests` and `secretstorage`.
 
-1. Test connectivity: `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/gerrit-review.py" query "status:open limit:1"`
-2. If authentication fails: `! python3 "${CLAUDE_PLUGIN_ROOT}/scripts/gerrit-review.py" store-password`
+1. Test connectivity: `python3 "${CLAUDE_PLUGIN_ROOT}/skills/fix-gerrit-reviews/scripts/gerrit-review.py" query "status:open limit:1"`
+2. If authentication fails: `! python3 "${CLAUDE_PLUGIN_ROOT}/skills/fix-gerrit-reviews/scripts/gerrit-review.py" store-password`
 
-In all snippets below, set `GERRIT="python3 ${CLAUDE_PLUGIN_ROOT}/scripts/gerrit-review.py"` once and use `$GERRIT` in place of `gerrit-review.py`.
+In all snippets below, set `GERRIT="python3 ${CLAUDE_PLUGIN_ROOT}/skills/fix-gerrit-reviews/scripts/gerrit-review.py"` once and use `$GERRIT` in place of `gerrit-review.py`.
 
 ## Workflow
 

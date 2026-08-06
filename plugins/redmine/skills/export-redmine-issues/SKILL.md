@@ -16,12 +16,22 @@ Fetch every issue of a Redmine project via the REST API and write each one as a 
 
 ## Prerequisites
 
-The helper script is bundled with this plugin at `${CLAUDE_PLUGIN_ROOT}/scripts/redmine.py`. Always invoke it through that path — do not assume it is on `$PATH`. It needs Python 3 with the `requests` and `secretstorage` packages.
+The helper script is bundled with this skill in its `scripts/` directory. It needs Python 3 with the `requests` and `secretstorage` packages. Resolve its absolute path once, depending on how the skill was installed:
+
+```bash
+if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ]; then
+  REDMINE_HELPER="${CLAUDE_PLUGIN_ROOT}/skills/export-redmine-issues/scripts/redmine.py"
+else
+  REDMINE_HELPER="$(find "${HOME}/.claude/skills" "${HOME}/.agents/skills" "${HOME}/.config/opencode/skills" -maxdepth 4 -path '*/export-redmine-issues/scripts/redmine.py' 2>/dev/null | head -1)"
+fi
+```
+
+If `REDMINE_HELPER` comes back empty, locate `redmine.py` with a `find` from the project's `.claude/skills` or `.agents/skills`. Always invoke the script through the resolved path — do not assume it is on `$PATH`.
 
 First-time setup (the user runs this once per Redmine instance):
 
 ```bash
-! python3 "${CLAUDE_PLUGIN_ROOT}/scripts/redmine.py" configure
+! python3 "${REDMINE_HELPER}" configure
 ```
 
 `configure` prompts for the Redmine base URL (saved to `~/.config/redmine/config`) and the API key (saved to the libsecret keyring under `service=redmine, server=<host>`).
@@ -29,7 +39,7 @@ First-time setup (the user runs this once per Redmine instance):
 Smoke-test connectivity afterwards:
 
 ```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/scripts/redmine.py" projects
+python3 "${REDMINE_HELPER}" projects
 ```
 
 If this fails with an auth error, ask the user to re-run `configure`.
@@ -41,7 +51,7 @@ If this fails with an auth error, ask the user to re-run `configure`.
 - If the user provides a project identifier (slug like `seapath`) or numeric id, use it directly.
 - If the user is unsure, list projects and ask:
   ```bash
-  python3 "${CLAUDE_PLUGIN_ROOT}/scripts/redmine.py" projects
+  python3 "${REDMINE_HELPER}" projects
   ```
 
 ### 2. Confirm the Output Directory
@@ -52,7 +62,7 @@ If this fails with an auth error, ask the user to re-run `configure`.
 ### 3. Run the Export
 
 ```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/scripts/redmine.py" export <project> --output tasks
+python3 "${REDMINE_HELPER}" export <project> --output tasks
 ```
 
 Useful flags to pass through when the user asks:

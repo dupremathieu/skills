@@ -20,12 +20,20 @@ can route requests to models from OpenAI, Google, and other providers.
 
 ## Prerequisites
 
-The CLI is bundled at `${CLAUDE_PLUGIN_ROOT}/scripts/openrouter-image`. Always
-invoke it through that absolute path. For brevity, set once:
+The CLI is bundled with this skill in its `scripts/` directory. Resolve its
+absolute path once, depending on how the skill was installed:
 
 ```bash
-OR_IMAGE="${CLAUDE_PLUGIN_ROOT}/scripts/openrouter-image"
+if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ]; then
+  OR_IMAGE="${CLAUDE_PLUGIN_ROOT}/skills/openrouter-image/scripts/openrouter-image"
+else
+  OR_IMAGE="$(find "${HOME}/.claude/skills" "${HOME}/.agents/skills" "${HOME}/.config/opencode/skills" -maxdepth 4 -path '*/openrouter-image/scripts/openrouter-image' 2>/dev/null | head -1)"
+fi
 ```
+
+If `OR_IMAGE` comes back empty, locate the CLI with a `find` from the project's
+`.claude/skills` or `.agents/skills`. Always invoke it through the resolved
+path — do not assume it is on `$PATH`.
 
 The CLI needs Python 3 and an OpenRouter API key. The key is read from the
 `OPENROUTER_API_KEY` environment variable first, then from
